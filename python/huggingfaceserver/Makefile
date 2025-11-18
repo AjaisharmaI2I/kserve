@@ -19,10 +19,10 @@ install_cpu_dependencies:
 	
 	uv lock
 
-	uv add --active \
-		"intel_extension_for_pytorch~=${TORCH_VERSION}" \
-		--index ${IPEX_EXTRA_INDEX_URL} \
-		--index-strategy unsafe-best-match
+# 	uv add --active \
+# 		"intel_extension_for_pytorch~=${TORCH_VERSION}" \
+# 		--index ${IPEX_EXTRA_INDEX_URL} \
+# 		--index-strategy unsafe-best-match
 
 	uv sync --active --no-cache --dev --group test
 
