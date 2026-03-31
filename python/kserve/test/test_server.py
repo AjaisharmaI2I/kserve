@@ -884,6 +884,8 @@ class TestRayServer:
         server.register_model(model)
         yield kserve_app
         await server.model_repository_extension.unload("TestModel")
+        # Allow a grace period for pending tasks to complete before shutdown
+        await asyncio.sleep(1)
         serve.shutdown()
 
     def test_liveness_handler(self, http_server_client):

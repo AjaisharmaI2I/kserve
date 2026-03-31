@@ -391,18 +391,22 @@ class DataPlane:
         return decoded_body, attributes
 
     def decode_inference_request(
-        self, body: Union[bytes, InferenceRequest], headers: Dict, model_name: str
+        self, body: bytes, headers: Dict, model_name: str
     ) -> InferRequest:
-        if isinstance(body, bytes):
-            json_length = headers.get(INFERENCE_CONTENT_LENGTH_HEADER, None)
-            if json_length is None:
-                raise InvalidInput(
-                    f"received byte inputs, but the"
-                    f"'{INFERENCE_CONTENT_LENGTH_HEADER}' header is missing."
-                )
-            return InferRequest.from_bytes(body, int(json_length), model_name)
-        else:
-            return InferRequest.from_inference_request(body, model_name)
+        try:
+            body_dict = orjson.loads(body)
+            inference_req = InferenceRequest.model_validate(body_dict)
+            return InferRequest.from_inference_request(inference_req, model_name)
+        except orjson.JSONDecodeError:
+            pass
+
+        json_length = headers.get(INFERENCE_CONTENT_LENGTH_HEADER, None)
+        if json_length is None:
+            raise InvalidInput(
+                f"received byte inputs, but the"
+                f"'{INFERENCE_CONTENT_LENGTH_HEADER}' header is missing."
+            )
+        return InferRequest.from_bytes(body, int(json_length), model_name)
 
     def encode(
         self,

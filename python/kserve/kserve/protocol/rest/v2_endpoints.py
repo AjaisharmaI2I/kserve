@@ -19,7 +19,6 @@ from fastapi.requests import Request
 from fastapi.responses import Response
 
 from .v2_datamodels import (
-    InferenceRequest,
     ServerMetadataResponse,
     ServerLiveResponse,
     ServerReadyResponse,
@@ -134,7 +133,6 @@ class V2Endpoints:
         raw_request: Request,
         raw_response: Response,
         model_name: str,
-        request_body: Union[InferenceRequest, bytes],
         model_version: Optional[str] = None,
     ) -> Union[InferenceResponse, Response]:
         """Infer handler.
@@ -143,7 +141,6 @@ class V2Endpoints:
             raw_request (Request): fastapi request object,
             raw_response (Response): fastapi response object,
             model_name (str): Model name.
-            request_body (InferenceRequest): Inference request body.
             model_version (Optional[str]): Model version (optional).
 
         Returns:
@@ -160,6 +157,8 @@ class V2Endpoints:
             raise ModelNotReady(model_name)
 
         request_headers = dict(raw_request.headers)
+        # Read request body directly to avoid FastAPI validation issues with mixed JSON/binary content
+        request_body = await raw_request.body()
 
         infer_request, _ = self.dataplane.decode(
             request_body,
